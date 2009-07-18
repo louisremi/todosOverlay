@@ -3,12 +3,12 @@
 $("body").append((
 	"<div id=\"overlayDiv\">"+
 		"<div id=\"overlayRelative\">"+
-			"<img id=\"overlayClose\" src=\"image/close.png\" />"+
+			"<div id=\"overlayClose\"></div>"+
 			"<img id=\"overlayLoader\" src=\"image/loader.gif\" />"+
 			"<img id=\"overlayImage\" />"+
 			"<div id=\"overlayPlus\">"+
-				"<img id=\"overlayPrevious\" src=\"image/keyLeft.png\" class=\"overlayKey\" />"+
-				"<img id=\"overlayNext\" src=\"image/keyRight.png\" class=\"overlayKey\" />"+		
+				"<div id=\"overlayPrevious\" class=\"overlayKey\"></div>"+
+				"<div id=\"overlayNext\" class=\"overlayKey\" /></div>"+	
 				"<p id=\"overlayTitle\"></p>"+
 			"</div>"+
 		"</div>"+
@@ -29,10 +29,7 @@ var $overlay = $("#overlayDiv").click(function(e) {
 			height: 0,
 			left: "+=" + overlayWidth /2,
 			top: "+=" + overlayWidth /Format /2
-		}).queue(function() {
-			$image.css({
-				width: "auto"
-			}).attr("src", "");
+		}).queue(function() {			
 			$overlay.hide().dequeue();
 		});
 		
@@ -64,33 +61,35 @@ $.fn.extend({
 				options = $.extend({}, $.todosOverlay.defaults, o);
 			$this.click(function(e) {
 				if(e.target.tagName == "IMG") {
-					//Immediately hide the text to prevent visual glitches
-					$plus.hide();
-					$overlay.removeClass("maximized");
-					var target = e.target, 
-						$target = $(target),
+					var target = e.target,
+						// Prepare/reset the overlay for a new image as soon as possible
+						_$image = $image.css({
+								width: "auto",
+								opacity: 0,
+								display: "block"
+							}).attr("src", ""),
+						_$plus = $plus.hide(),
+						_$overlay = $overlay.removeClass("maximized"),
+						// Cache useful values
+						$target = $(target),						
+						title = $target.attr("title"),
+						overlayWidth = options.width,
+						// Create new vars
 						targetPosition = $target.position(),
 						targetWidth = $target.width(),
 						targetHeight = $target.height(),
-						fixedPosition = $fixed.position(),
-						// Cache usefull values
-						overlayWidth = options.width,
-						_$image = $image.attr("src", target.src.replace(options.regex, options.replace))
-							.css({
-								opacity: 0,
-								display: "block"
-							}),
-						title = $target.attr("title");
+						fixedPosition = $fixed.position();
+					_$image.attr("src", target.src.replace(options.regex, options.replace));
 					// Make sure that the load event fires even from cache 
 					Load = setInterval(function() {
-						if($image.width() != 0)
-							$image.trigger("load");
+						if(_$image.width() != 0)
+							_$image.trigger("load");
 					}, 200);
-					$title.text(title).css("visibility", title? "visible" : "hidden");
+					$title.text(title).css({display: "block", visibility: title? "visible" : "hidden"});
 					$CurrentTarget = $target;
 					$CurrentContainer = $(this);
 					Format = targetWidth / targetHeight;
-					$overlay.data("width", options.width)
+					_$overlay.data("width", options.width)
 					// Move the overlay over the clicked image
 					.css({
 						left: targetPosition.left,
@@ -105,8 +104,8 @@ $.fn.extend({
 						width: overlayWidth,
 						height: overlayWidth / Format
 					}).queue(function() {
-						$plus.fadeIn();
-						$overlay.addClass("maximized").dequeue();
+						_$plus.fadeIn();
+						_$overlay.addClass("maximized").dequeue();
 					});
 				}
 			}).find("img").each(function(i) {
@@ -120,10 +119,19 @@ $(window).keydown(function(e) {
 		if($overlay.is(":visible"))
 		switch(e.keyCode) {
 			case 37:
+				// previous
 				$overlay.trigger("change", [-1]);
+				return false;
 				break;
 			case 39:
+				// next
 				$overlay.trigger("change", [1]);
+				return false;
+				break;
+			case 27:
+				// escape
+				$overlay.trigger("minimize");
+				return false;
 				break;
 		}
 });
