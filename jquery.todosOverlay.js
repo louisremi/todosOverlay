@@ -33,12 +33,6 @@ var $overlay = $("#overlayDiv").click(function(e) {
 			$overlay.hide().dequeue();
 		});
 		
-	}).hover(function() {
-		if($overlay.hasClass("maximized"))
-			$title.stop(true, true).fadeIn();
-	}, function() {
-		if($overlay.hasClass("maximized"))
-			$title.stop(true, true).fadeOut();
 	}),
 	$image = $("#overlayImage").load(function() {
 		clearInterval(Load);
@@ -47,7 +41,13 @@ var $overlay = $("#overlayDiv").click(function(e) {
 		}).animate({opacity: 1});
 	}),
 	$plus = $('#overlayPlus'),
-	$title = $("#overlayTitle").css("opacity", .8),
+	$title = $("#overlayTitle").hover(function() {
+			if($overlay.hasClass("maximized"))
+				$title.stop().animate({opacity: .1});
+		}, function() {
+			if($overlay.hasClass("maximized"))
+				$title.stop().animate({opacity: .8});
+		}).css("opacity", .8),
 	$fixed = $("#fixedDiv"),
 	Format,
 	Load,
